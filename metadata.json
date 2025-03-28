@@ -4,5 +4,5 @@
     "description[de]": "Öffne Lesezeichen Chromium-basierter Browser",
     "license": "MIT",
     "name": "Chromium",
-    "url": "https://github.com/albertlauncher/plugins/tree/main/chromium",
+    "url": "https://github.com/albertlauncher/albert-plugin-chromium",
 }
