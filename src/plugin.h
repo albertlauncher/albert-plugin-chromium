@@ -10,7 +10,7 @@ class BookmarkItem;
 
 
 class Plugin : public albert::ExtensionPlugin,
-               public albert::IndexQueryHandler
+               public albert::util::IndexQueryHandler
 {
     ALBERT_PLUGIN
 
@@ -27,7 +27,7 @@ private:
     void setPaths(const QStringList &paths);
 
     QFileSystemWatcher fs_watcher_;
-    albert::BackgroundExecutor<std::vector<std::shared_ptr<BookmarkItem>>> indexer;
+    albert::util::BackgroundExecutor<std::vector<std::shared_ptr<BookmarkItem>>> indexer;
     QStringList paths_;
     bool index_hostname_;
     std::vector<std::shared_ptr<BookmarkItem>> bookmarks_;

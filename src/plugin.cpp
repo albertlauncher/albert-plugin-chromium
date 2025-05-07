@@ -18,6 +18,7 @@
 ALBERT_LOGGING_CATEGORY("chromium")
 using namespace albert;
 using namespace std;
+using namespace util;
 
 static const char* CFG_BM_PATHS = "bookmarks_path";
 static const char* CFG_INDEX_HOSTNAME = "indexHostname";
