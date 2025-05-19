@@ -1,4 +1,4 @@
-// Copyright (c) 2022-2024 Manuel Schneider
+// Copyright (c) 2022-2025 Manuel Schneider
 
 #include "bookmarkitem.h"
 #include <QCoreApplication>
@@ -9,17 +9,13 @@ using namespace std;
 BookmarkItem::BookmarkItem(const QString &i, const QString &n, const QString &f, const QString &u):
     id_(i), name_(n), folder_(f), url_(u) {}
 
-QString BookmarkItem::id() const
-{ return id_; }
+QString BookmarkItem::id() const { return id_; }
 
-QString BookmarkItem::text() const
-{ return name_; }
+QString BookmarkItem::text() const { return name_; }
 
-QString BookmarkItem::subtext() const
-{ return QStringLiteral("[%1] %2").arg(folder_, url_); }
+QString BookmarkItem::subtext() const { return folder_; }
 
-QString BookmarkItem::inputActionText() const
-{ return name_; }
+QString BookmarkItem::inputActionText() const { return name_; }
 
 QStringList BookmarkItem::iconUrls() const
 {

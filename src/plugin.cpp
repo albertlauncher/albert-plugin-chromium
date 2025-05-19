@@ -1,4 +1,4 @@
-// Copyright (c) 2022-2024 Manuel Schneider
+// Copyright (c) 2022-2025 Manuel Schneider
 
 #include "bookmarkitem.h"
 #include "plugin.h"
@@ -10,15 +10,15 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSettings>
-#include <QStringListModel>
 #include <QStandardPaths>
+#include <QStringListModel>
 #include <albert/albert.h>
 #include <albert/logging.h>
 #include <utility>
 ALBERT_LOGGING_CATEGORY("chromium")
+using namespace albert::util;
 using namespace albert;
 using namespace std;
-using namespace util;
 
 static const char* CFG_BM_PATHS = "bookmarks_path";
 static const char* CFG_INDEX_HOSTNAME = "indexHostname";
@@ -33,32 +33,39 @@ static const char *app_dirs[] = {
     "vivaldi"
 };
 
+static void recursiveJsonTreeWalker(const QString &folder_path,
+                                    const QJsonObject &json,
+                                    vector<shared_ptr<BookmarkItem>> &items)
+{
+    auto name = json["name"].toString();
+    auto type = json["type"].toString();
+
+    if (type == "folder")
+    {
+        // having the full folder path shouldnt be too expensive due to the shared nature of qstring
+        QString folder_path_ = folder_path.isEmpty() ? name
+                                                     : folder_path + " → " + name;
+
+        for (const QJsonValueRef &child : json["children"].toArray())
+            recursiveJsonTreeWalker(folder_path_, child.toObject(), items);
+    }
+
+    else if (type == "url")
+        items.emplace_back(make_shared<BookmarkItem>(json["guid"].toString(),
+                                                     name,
+                                                     folder_path,
+                                                     json["url"].toString()));
+};
+
 static vector<shared_ptr<BookmarkItem>> parseBookmarks(const QStringList& paths, const bool &abort)
 {
-    function<void(const QString&, const QJsonObject&, vector<shared_ptr<BookmarkItem>>&)> recursiveJsonTreeWalker =
-        [&recursiveJsonTreeWalker](const QString &parent_name, const QJsonObject &json, vector<shared_ptr<BookmarkItem>> &items)
-        {
-            auto name = json["name"].toString();
-            auto type = json["type"].toString();
-
-            if (type == "folder")
-                for (const QJsonValueRef &child : json["children"].toArray())
-                    recursiveJsonTreeWalker(name, child.toObject(), items);
-
-            else if (type == "url")
-                items.emplace_back(make_shared<BookmarkItem>(json["guid"].toString(),
-                                                             name,
-                                                             parent_name,
-                                                             json["url"].toString()));
-        };
-
     vector<shared_ptr<BookmarkItem>> results;
     for (auto &path : paths) {
         if (abort)
             return {};
         if (QFile f(path); f.open(QIODevice::ReadOnly))
         {
-            for (const auto &root: QJsonDocument::fromJson(f.readAll()).object().value("roots").toObject())
+            for (const auto &root : QJsonDocument::fromJson(f.readAll()).object().value("roots").toObject())
                 if (root.isObject())
                     recursiveJsonTreeWalker({}, root.toObject(), results);
             f.close();
