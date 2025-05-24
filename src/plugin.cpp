@@ -16,56 +16,57 @@
 #include <albert/logging.h>
 #include <utility>
 ALBERT_LOGGING_CATEGORY("chromium")
+using namespace Qt::StringLiterals;
 using namespace albert::util;
 using namespace albert;
 using namespace std;
 
-static const char* CFG_BM_PATHS = "bookmarks_path";
-static const char* CFG_INDEX_HOSTNAME = "indexHostname";
-static const bool  DEF_INDEX_HOSTNAME = false;
+static const auto CFG_BM_PATHS = u"bookmarks_path"_s;
+static const auto CFG_INDEX_HOSTNAME = u"indexHostname"_s;
+static const bool DEF_INDEX_HOSTNAME = false;
 
-static const char *app_dirs[] = {
-    "BraveSoftware",
-    "Google/Chrome",  // Google Chrome Macos
-    "brave-browser",
-    "chromium",
-    "google-chrome",
-    "vivaldi"
-};
+static const QString app_dirs[] = {u"BraveSoftware"_s,
+                                   u"Google/Chrome"_s,  // Google Chrome Macos
+                                   u"brave-browser"_s,
+                                   u"chromium"_s,
+                                   u"google-chrome"_s,
+                                   u"vivaldi"_s};
 
 static void recursiveJsonTreeWalker(const QString &folder_path,
                                     const QJsonObject &json,
                                     vector<shared_ptr<BookmarkItem>> &items)
 {
-    auto name = json["name"].toString();
-    auto type = json["type"].toString();
+    auto name = json[u"name"_s].toString();
+    auto type = json[u"type"_s].toString();
 
-    if (type == "folder")
+    if (type == u"folder"_s)
     {
         // having the full folder path shouldnt be too expensive due to the shared nature of qstring
-        QString folder_path_ = folder_path.isEmpty() ? name
-                                                     : folder_path + " → " + name;
+        QString folder_path_ = folder_path.isEmpty() ? name : folder_path + u" → "_s + name;
 
-        for (const QJsonValueRef &child : json["children"].toArray())
+        for (const QJsonValueRef &child : json[u"children"_s].toArray())
             recursiveJsonTreeWalker(folder_path_, child.toObject(), items);
     }
 
-    else if (type == "url")
-        items.emplace_back(make_shared<BookmarkItem>(json["guid"].toString(),
+    else if (type == u"url"_s)
+        items.emplace_back(make_shared<BookmarkItem>(json[u"guid"_s].toString(),
                                                      name,
                                                      folder_path,
-                                                     json["url"].toString()));
+                                                     json[u"url"_s].toString()));
 };
 
-static vector<shared_ptr<BookmarkItem>> parseBookmarks(const QStringList& paths, const bool &abort)
+static vector<shared_ptr<BookmarkItem>> parseBookmarks(const QStringList &paths, const bool &abort)
 {
     vector<shared_ptr<BookmarkItem>> results;
-    for (auto &path : paths) {
+    for (auto &path : paths)
+    {
         if (abort)
             return {};
         if (QFile f(path); f.open(QIODevice::ReadOnly))
         {
-            for (const auto &root : QJsonDocument::fromJson(f.readAll()).object().value("roots").toObject())
+            const auto doc = QJsonDocument::fromJson(f.readAll());
+            const auto roots = doc.object().value(u"roots"_s).toObject();
+            for (const auto &root : roots)
                 if (root.isObject())
                     recursiveJsonTreeWalker({}, root.toObject(), results);
             f.close();
@@ -75,7 +76,6 @@ static vector<shared_ptr<BookmarkItem>> parseBookmarks(const QStringList& paths,
     }
     return results;
 }
-
 
 Plugin::Plugin()
 {
@@ -88,7 +88,7 @@ Plugin::Plugin()
     if (!paths_.isEmpty())
         fs_watcher_.addPaths(paths_);
 
-    connect(&fs_watcher_, &QFileSystemWatcher::fileChanged, this, [this]{
+    connect(&fs_watcher_, &QFileSystemWatcher::fileChanged, this, [this] {
         // Update watches. Chromium seems to mv the file (inode change).
         if (!fs_watcher_.files().isEmpty())
             fs_watcher_.removePaths(fs_watcher_.files());
@@ -96,11 +96,11 @@ Plugin::Plugin()
         indexer.run();
     });
 
-    indexer.parallel = [this](const bool &abort){ return parseBookmarks(paths_, abort); };
-    indexer.finish = [this](vector<shared_ptr<BookmarkItem>> && res)
-    {
-        INFO << QStringLiteral("Indexed %1 bookmarks [%2 ms]")
-                    .arg(res.size()).arg(indexer.runtime.count());
+    indexer.parallel = [this](const bool &abort) { return parseBookmarks(paths_, abort); };
+    indexer.finish = [this](vector<shared_ptr<BookmarkItem>> &&res) {
+        INFO << u"Indexed %1 bookmarks [%2 ms]"_s
+                    .arg(res.size())
+                    .arg(indexer.runtime.count());
 
         emit statusChanged(tr("%n bookmarks indexed.", nullptr, res.size()));
 
@@ -111,7 +111,7 @@ Plugin::Plugin()
     indexer.run();
 }
 
-void Plugin::setPaths(const QStringList& paths)
+void Plugin::setPaths(const QStringList &paths)
 {
     paths_ = paths;
     paths_.sort();
@@ -119,7 +119,7 @@ void Plugin::setPaths(const QStringList& paths)
     // Chromium seems to mv the file (inode change).
     if (!fs_watcher_.files().isEmpty())
         fs_watcher_.removePaths(fs_watcher_.files());
-    if(!paths_.isEmpty())
+    if (!paths_.isEmpty())
         fs_watcher_.addPaths(paths_);
 
     settings()->setValue(CFG_BM_PATHS, paths_);
@@ -132,9 +132,12 @@ QStringList Plugin::defaultPaths() const
     QStringList paths;
     for (auto loc : {QStandardPaths::GenericDataLocation, QStandardPaths::GenericConfigLocation})
         for (const auto &path : QStandardPaths::standardLocations(loc))
-            for (const char *app_dir_name : app_dirs)
-                for (QDirIterator it(QDir(path).filePath(app_dir_name), {"Bookmarks"},
-                                     QDir::Files, QDirIterator::Subdirectories); it.hasNext();)
+            for (const auto &app_dir_name : app_dirs)
+                for (QDirIterator it(QDir(path).filePath(app_dir_name),
+                                     {u"Bookmarks"_s},
+                                     QDir::Files,
+                                     QDirIterator::Subdirectories);
+                     it.hasNext();)
                     paths << it.next();
     return paths;
 }
@@ -144,10 +147,12 @@ void Plugin::resetPaths() { setPaths(defaultPaths()); }
 void Plugin::updateIndexItems()
 {
     vector<IndexItem> index_items;
-    for (const auto &bookmark : bookmarks_){
+    for (const auto &bookmark : bookmarks_)
+    {
         index_items.emplace_back(static_pointer_cast<Item>(bookmark), bookmark->name_);
         if (index_hostname_)
-            index_items.emplace_back(static_pointer_cast<Item>(bookmark), QUrl(bookmark->url_).host());
+            index_items.emplace_back(static_pointer_cast<Item>(bookmark),
+                                     QUrl(bookmark->url_).host());
     }
     setIndexItems(::move(index_items));
 }
@@ -163,35 +168,33 @@ QWidget *Plugin::buildConfigWidget()
     ui.listView_paths->setModel(string_list_model);
 
     ui.checkBox_index_hostname->setChecked(index_hostname_);
-    connect(ui.checkBox_index_hostname, &QCheckBox::toggled,
-            this, [this](bool checked)
-            {
-                settings()->setValue(CFG_INDEX_HOSTNAME, checked);
-                index_hostname_ = checked;
-                indexer.run();
-            });
+    connect(ui.checkBox_index_hostname, &QCheckBox::toggled, this, [this](bool checked) {
+        settings()->setValue(CFG_INDEX_HOSTNAME, checked);
+        index_hostname_ = checked;
+        indexer.run();
+    });
 
     ui.label_status->setText(tr("%n bookmarks indexed.", nullptr, bookmarks_.size()));
-    connect(this, &Plugin::statusChanged,
-            ui.label_status, &QLabel::setText);
+    connect(this, &Plugin::statusChanged, ui.label_status, &QLabel::setText);
 
-    connect(ui.pushButton_add, &QPushButton::clicked,
-            this, [this, w, m = string_list_model]()
-            {
-                auto path = QFileDialog::getOpenFileName(
-                    w, tr("Select bookmarks file"), QDir::homePath(),
-                    QString("%1 (Bookmarks)").arg(tr("Bookmarks")));
+    connect(ui.pushButton_add, &QPushButton::clicked, this, [this, w, m = string_list_model] {
+        auto path = QFileDialog::getOpenFileName(w,
+                                                 tr("Select bookmarks file"),
+                                                 QDir::homePath(),
+                                                 u"%1 (Bookmarks)"_s.arg(tr("Bookmarks")));
 
-                if (!path.isNull() && !paths_.contains(path)) {
-                    paths_ << path;
-                    setPaths(paths_);
-                    m->setStringList(paths_);
-                }
-            });
+        if (!path.isNull() && !paths_.contains(path))
+        {
+            paths_ << path;
+            setPaths(paths_);
+            m->setStringList(paths_);
+        }
+    });
 
-    connect(ui.pushButton_rem, &QPushButton::clicked,
-            this, [this,v=ui.listView_paths,m=string_list_model]()
-            {
+    connect(ui.pushButton_rem,
+            &QPushButton::clicked,
+            this,
+            [this, v = ui.listView_paths, m = string_list_model]() {
                 if (!v->currentIndex().isValid())
                     return;
                 paths_.removeAt(v->currentIndex().row());
@@ -199,12 +202,10 @@ QWidget *Plugin::buildConfigWidget()
                 m->setStringList(paths_);
             });
 
-    connect(ui.pushButton_reset, &QPushButton::clicked, this,
-            [this,m=string_list_model]()
-            {
-                resetPaths();
-                m->setStringList(paths_);
-            });
+    connect(ui.pushButton_reset, &QPushButton::clicked, this, [this, m = string_list_model]() {
+        resetPaths();
+        m->setStringList(paths_);
+    });
 
     return w;
 }
