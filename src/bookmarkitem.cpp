@@ -2,8 +2,9 @@
 
 #include "bookmarkitem.h"
 #include <QCoreApplication>
-#include <albert/albert.h>
+#include <albert/systemutil.h>
 using namespace Qt::Literals;
+using namespace albert::util;
 using namespace albert;
 using namespace std;
 
