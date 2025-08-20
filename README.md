@@ -1,1 +1,1 @@
-# albert-plugin-chromium
+# Albert plugin: Chromium
