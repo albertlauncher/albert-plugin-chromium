@@ -2,6 +2,7 @@
 
 #include "bookmarkitem.h"
 #include <QCoreApplication>
+#include <albert/iconutil.h>
 #include <albert/systemutil.h>
 using namespace Qt::Literals;
 using namespace albert::util;
@@ -23,16 +24,7 @@ QString BookmarkItem::subtext() const { return folder_; }
 
 QString BookmarkItem::inputActionText() const { return name_; }
 
-QStringList BookmarkItem::iconUrls() const
-{
-    return {
-#if defined Q_OS_UNIX and not defined Q_OS_MAC
-        u"xdg:www"_s,
-        u"xdg:web-browser"_s,
-        u"xdg:emblem-web"_s,
-#endif
-        u"qrc:star"_s};
-}
+unique_ptr<Icon> BookmarkItem::icon() const { return makeImageIcon(u":star"_s); }
 
 vector<Action> BookmarkItem::actions() const
 {

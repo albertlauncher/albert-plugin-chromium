@@ -13,7 +13,7 @@ public:
     QString text() const override;
     QString subtext() const override;
     QString inputActionText() const override;
-    QStringList iconUrls() const override;
+    std::unique_ptr<albert::Icon> icon() const override;
     std::vector<albert::Action> actions() const override;
 
     const QString id_;
