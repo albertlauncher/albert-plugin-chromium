@@ -5,7 +5,6 @@
 #include <albert/iconutil.h>
 #include <albert/systemutil.h>
 using namespace Qt::Literals;
-using namespace albert::util;
 using namespace albert;
 using namespace std;
 

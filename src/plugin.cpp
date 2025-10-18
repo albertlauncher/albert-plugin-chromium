@@ -12,12 +12,10 @@
 #include <QSettings>
 #include <QStandardPaths>
 #include <QStringListModel>
-#include <albert/albert.h>
 #include <albert/logging.h>
 #include <utility>
 ALBERT_LOGGING_CATEGORY("chromium")
 using namespace Qt::StringLiterals;
-using namespace albert::util;
 using namespace albert;
 using namespace std;
 
@@ -97,15 +95,11 @@ Plugin::Plugin()
     });
 
     indexer.parallel = [this](const bool &abort) { return parseBookmarks(paths_, abort); };
-    indexer.finish = [this](vector<shared_ptr<BookmarkItem>> &&res) {
-        INFO << u"Indexed %1 bookmarks [%2 ms]"_s
-                    .arg(res.size())
-                    .arg(indexer.runtime.count());
-
-        emit statusChanged(tr("%n bookmarks indexed.", nullptr, res.size()));
-
-        bookmarks_ = ::move(res);
-
+    indexer.finish = [this]
+    {
+        bookmarks_ = indexer.takeResult();
+        INFO << u"Indexed %1 bookmarks."_s.arg(bookmarks_.size());
+        emit statusChanged(tr("%n bookmarks indexed.", nullptr, bookmarks_.size()));
         updateIndexItems();
     };
     indexer.run();
