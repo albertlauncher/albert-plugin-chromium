@@ -2,7 +2,7 @@
 
 #include "bookmarkitem.h"
 #include <QCoreApplication>
-#include <albert/iconutil.h>
+#include <albert/icon.h>
 #include <albert/systemutil.h>
 using namespace Qt::Literals;
 using namespace albert;
@@ -23,7 +23,7 @@ QString BookmarkItem::subtext() const { return folder_; }
 
 QString BookmarkItem::inputActionText() const { return name_; }
 
-unique_ptr<Icon> BookmarkItem::icon() const { return makeImageIcon(u":star"_s); }
+unique_ptr<Icon> BookmarkItem::icon() const { return Icon::image(u":star"_s); }
 
 vector<Action> BookmarkItem::actions() const
 {
