@@ -25,12 +25,12 @@ namespace {
 const auto &CFG_PROFILE_PATH = u"profile_path"_s;
 const auto &CFG_MATCH_HOSTNAME = u"match_hostname"_s;
 const auto DEF_MATCH_HOSTNAME = false;
-const array APP_DIRS = {"BraveSoftware"s,
-                        "Google/Chrome"s,  // Google Chrome Macos
-                        "brave-browser"s,
-                        "chromium"s,
-                        "google-chrome"s,
-                        "vivaldi"s};
+const array DATA_DIR_NAMES = {"BraveSoftware"s,
+                              "Google/Chrome"s,  // Google Chrome Macos
+                              "brave-browser"s,
+                              "chromium"s,
+                              "google-chrome"s,
+                              "vivaldi"s};
 }
 
 static expected<map<path, QString>, QString> getProfiles(const path &local_state_file)
@@ -93,23 +93,36 @@ static expected<map<path, QString>, QString> getProfiles(const path &local_state
     }
 }
 
+static vector<path> findBrowserDataDirs()
+{
+#if defined(Q_OS_MAC)
+    const auto std_loc = QStandardPaths::GenericDataLocation;
+#else
+    const auto std_loc = QStandardPaths::GenericConfigLocation;
+#endif
+
+    vector<path> data_dir_paths;
+    for (const auto &std_path : QStandardPaths::standardLocations(std_loc))
+        for (const auto &data_dir_name : DATA_DIR_NAMES)
+            if (auto data_dir_path = path(std_path.toStdString()) / data_dir_name;
+                exists(data_dir_path))
+                data_dir_paths.emplace_back(data_dir_path);
+    return data_dir_paths;
+}
+
 static map<path, QString> getProfiles()
 {
-    using QSP = QStandardPaths;
     map<path, QString> profiles;
 
-    for (const auto std_loc : {QSP::GenericDataLocation, QSP::GenericConfigLocation})
-        for (const auto &std_path : QSP::standardLocations(std_loc))
-            for (const auto &data_dir_name : APP_DIRS)
-                if (auto ls = path(std_path.toStdString()) / data_dir_name / "Local State";
-                    exists(ls))
-                {
-                    if (auto p = getProfiles(ls);
-                        p)
-                        profiles.insert(p->begin(), p->end());
-                    else
-                        WARN << p.error();
-                }
+    for (const auto &data_dir : findBrowserDataDirs())
+        if (auto ls = data_dir / "Local State"; exists(ls))
+        {
+            if (auto p = getProfiles(ls); p.has_value())
+                profiles.insert(p->begin(), p->end());
+            else
+                WARN << p.error();
+        }
+
     return profiles;
 }
 
