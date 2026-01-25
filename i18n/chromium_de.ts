@@ -16,41 +16,57 @@
     <name>ConfigWidget</name>
     <message>
         <source>Add</source>
-        <translation>Hinzufügen</translation>
+        <translation type="vanished">Hinzufügen</translation>
     </message>
     <message>
         <source>Bookmarks files:</source>
-        <translation>Lesezeichen-Dateien:</translation>
+        <translation type="vanished">Lesezeichen-Dateien:</translation>
     </message>
     <message>
         <source>Remove</source>
-        <translation>Entfernen</translation>
+        <translation type="vanished">Entfernen</translation>
     </message>
     <message>
         <source>Reset</source>
-        <translation>Zurücksetzen</translation>
+        <translation type="vanished">Zurücksetzen</translation>
     </message>
     <message>
         <source>Use hostname in search</source>
-        <translation>Nutze Hostname in der Suche</translation>
+        <translation type="vanished">Nutze Hostname in der Suche</translation>
+    </message>
+    <message>
+        <source>Profile</source>
+        <translation>Profil</translation>
+    </message>
+    <message>
+        <source>Match hostname</source>
+        <translation>Hostname abgleichen</translation>
     </message>
 </context>
 <context>
     <name>Plugin</name>
     <message numerus="yes">
         <source>%n bookmarks indexed.</source>
-        <translation>
+        <translation type="vanished">
             <numerusform>%n Lesezeichen indexiert.</numerusform>
             <numerusform>%n Lesezeichen indexiert.</numerusform>
         </translation>
     </message>
     <message>
         <source>Select bookmarks file</source>
-        <translation>Wähle Lesezeichen-Datei</translation>
+        <translation type="vanished">Wähle Lesezeichen-Datei</translation>
     </message>
     <message>
         <source>Bookmarks</source>
-        <translation>Lesezeichen</translation>
+        <translation type="vanished">Lesezeichen</translation>
+    </message>
+    <message>
+        <source>No Chromium-based browser profiles found.</source>
+        <translation type="obsolete">Keine Chromium-basierten Browserprofile gefunden.</translation>
+    </message>
+    <message>
+        <source>No profiles found.</source>
+        <translation>Keine Profile gefunden.</translation>
     </message>
 </context>
 </TS>

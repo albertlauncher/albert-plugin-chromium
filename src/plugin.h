@@ -1,4 +1,4 @@
-// Copyright (c) 2022-2024 Manuel Schneider
+// Copyright (c) 2022-2026 Manuel Schneider
 
 #pragma once
 #include <albert/indexqueryhandler.h>
@@ -6,34 +6,30 @@
 #include <albert/extensionplugin.h>
 #include <QFileSystemWatcher>
 #include <memory>
+#include <vector>
 class BookmarkItem;
 
-
-class Plugin : public albert::ExtensionPlugin,
-               public albert::IndexQueryHandler
+class Plugin : public albert::ExtensionPlugin, public albert::IndexQueryHandler
 {
     ALBERT_PLUGIN
 
 public:
-
     Plugin();
     void updateIndexItems() override;
-    QWidget* buildConfigWidget() override;
+    QWidget *buildConfigWidget() override;
+
+    bool matchHostname() const;
+    void setMatchHostname(bool);
+
+    QString profilePath() const;
+    void setProfilePath(const QString &);
 
 private:
+    void resetBookmarksFileWatch();
 
-    QStringList defaultPaths() const;
-    void resetPaths();
-    void setPaths(const QStringList &paths);
-
-    QFileSystemWatcher fs_watcher_;
+    std::filesystem::path profile_path_;
     albert::BackgroundExecutor<std::vector<std::shared_ptr<BookmarkItem>>> indexer;
-    QStringList paths_;
-    bool index_hostname_;
     std::vector<std::shared_ptr<BookmarkItem>> bookmarks_;
-
-signals:
-
-    void statusChanged(const QString& status);
-
+    QFileSystemWatcher fs_watcher_;
+    bool match_hostname_;
 };

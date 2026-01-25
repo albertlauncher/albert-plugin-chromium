@@ -15,23 +15,11 @@
 <context>
     <name>ConfigWidget</name>
     <message>
-        <source>Bookmarks files:</source>
+        <source>Profile</source>
         <translation></translation>
     </message>
     <message>
-        <source>Add</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Remove</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Reset</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Use hostname in search</source>
+        <source>Match hostname</source>
         <translation></translation>
     </message>
 </context>
@@ -39,17 +27,13 @@
     <name>Plugin</name>
     <message numerus="yes">
         <source>%n bookmarks indexed.</source>
-        <translation>
+        <translation type="vanished">
             <numerusform>%n bookmark indexed.</numerusform>
             <numerusform>%n bookmarks indexed.</numerusform>
         </translation>
     </message>
     <message>
-        <source>Select bookmarks file</source>
-        <translation></translation>
-    </message>
-    <message>
-        <source>Bookmarks</source>
+        <source>No profiles found.</source>
         <translation></translation>
     </message>
 </context>
