@@ -3,4 +3,4 @@ project(chromium VERSION 9.3.2)
 
 find_package(Albert REQUIRED)
 
-albert_plugin(QT Widgets Concurrent)
+albert_plugin(QT Widgets Concurrent Sql)

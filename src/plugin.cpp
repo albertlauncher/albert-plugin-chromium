@@ -1,6 +1,7 @@
 // Copyright (c) 2022-2026 Manuel Schneider
 
 #include "bookmarkitem.h"
+#include "favicons.h"
 #include "plugin.h"
 #include "ui_configwidget.h"
 #include <QFile>
@@ -8,6 +9,7 @@
 #include <QJsonDocument>
 #include <QJsonObject>
 #include <QSettings>
+#include <QSqlDatabase>
 #include <QStandardPaths>
 #include <albert/logging.h>
 #include <albert/systemutil.h>
@@ -17,14 +19,18 @@
 ALBERT_LOGGING_CATEGORY("chromium")
 using namespace Qt::StringLiterals;
 using namespace albert;
+using namespace std::chrono;
 using namespace std::filesystem;
 using namespace std::string_literals;
 using namespace std;
 
 namespace {
+
+const auto &kFaviconsMtime = u"favicons_mtime"_s;
+
 const auto &CFG_PROFILE_PATH = u"profile_path"_s;
 const auto &CFG_MATCH_HOSTNAME = u"match_hostname"_s;
-const auto DEF_MATCH_HOSTNAME = false;
+const auto &CFG_SHOW_FAVICONS = u"show_favicons"_s;
 const array DATA_DIR_NAMES = {"BraveSoftware"s,
                               "Google/Chrome"s,  // Google Chrome Macos
                               "brave-browser"s,
@@ -174,34 +180,37 @@ static vector<shared_ptr<BookmarkItem>> parseBookmarks(const path &profile_path,
 
 Plugin::Plugin()
 {
+    create_directories(cacheLocation());
+
     auto s = settings();
-    match_hostname_ = s->value(CFG_MATCH_HOSTNAME, DEF_MATCH_HOSTNAME).toBool();
-    profile_path_ = s->value(CFG_PROFILE_PATH).toString().toStdString();
+
+    match_hostname_ = s->value(CFG_MATCH_HOSTNAME, false).toBool();
 
     const auto profiles = getProfiles();
     if (profiles.empty())
         throw runtime_error(tr("No profiles found.").toStdString());
-
+    profile_path_ = s->value(CFG_PROFILE_PATH).toString().toStdString();
     if (profile_path_.empty())
         setProfilePath(toQString(profiles.begin()->first));
+    connect(&bookmarks_watch_, &QFileSystemWatcher::fileChanged, this, [this] {
+        updateBookmarksFileWatch();
+        indexer.run();
+    });
+    updateBookmarksFileWatch();
 
     indexer.parallel = [p=profile_path_](const bool &abort) { return parseBookmarks(p, abort); };
-
-    indexer.finish = [this]
-    {
+    indexer.finish = [this] {
         bookmarks_ = indexer.takeResult();
         INFO << u"Indexed %1 bookmarks."_s.arg(bookmarks_.size());
         updateIndexItems();
     };
-
-    connect(&fs_watcher_, &QFileSystemWatcher::fileChanged, this, [this] {
-        resetBookmarksFileWatch();
-        indexer.run();
-    });
-    resetBookmarksFileWatch();
-
     indexer.run();
+
+    if (s->value(CFG_SHOW_FAVICONS, true).toBool())
+        updateCachedDatabase();
 }
+
+Plugin::~Plugin() {}
 
 void Plugin::updateIndexItems()
 {
@@ -222,8 +231,6 @@ QWidget *Plugin::buildConfigWidget()
     Ui::ConfigWidget ui;
     ui.setupUi(w);
 
-    bindWidget(ui.checkBox_match_hostname, this, &Plugin::matchHostname, &Plugin::setMatchHostname);
-
     // populate profiles checkbox
     for (const auto &[path, name] : getProfiles())
     {
@@ -241,8 +248,39 @@ QWidget *Plugin::buildConfigWidget()
             this, [this, comboBox_themes=ui.comboBox_profile](int i)
             { setProfilePath(comboBox_themes->itemData(i).toString()); });
 
+    bindWidget(ui.checkBox_show_favicons, this, &Plugin::showFavicons, &Plugin::setShowFavicons);
+
+    bindWidget(ui.checkBox_match_hostname, this, &Plugin::matchHostname, &Plugin::setMatchHostname);
+
     return w;
 }
+
+void Plugin::updateBookmarksFileWatch()
+{
+    if (!bookmarks_watch_.files().isEmpty())
+        bookmarks_watch_.removePaths(bookmarks_watch_.files());
+    bookmarks_watch_.addPath(toQString(profile_path_ / "Bookmarks"));
+}
+
+void Plugin::updateCachedDatabase()
+{
+    auto state = this->state();
+    const auto db = profile_path_ / "Favicons";
+    const auto cached_db = cacheLocation() / "Favicons";
+    qint64 last_mtime = state->value(kFaviconsMtime, 0).toLongLong();
+    qint64 mtime = duration_cast<seconds>(last_write_time(db).time_since_epoch()).count();
+
+    favicons_.reset();
+    if (!exists(cached_db) || mtime > last_mtime)
+    {
+        if (copy_file(db, cached_db, copy_options::overwrite_existing))
+            WARN << "Failed to copy Favicons database to cache.";
+        state->setValue(kFaviconsMtime, mtime);
+    }
+    favicons_ = make_unique<Favicons>(cached_db);
+    BookmarkItem::favicons = favicons_.get();
+}
+
 
 bool Plugin::matchHostname() const { return match_hostname_; }
 
@@ -263,17 +301,32 @@ void Plugin::setProfilePath(const QString &v)
     if (v == toQString(profile_path_))
         return;
 
-    profile_path_ = v.toStdString();
     settings()->setValue(CFG_PROFILE_PATH, v);
-    resetBookmarksFileWatch();
+    profile_path_ = v.toStdString();
+
+    updateBookmarksFileWatch();
+
+    if (showFavicons())
+        updateCachedDatabase();
+
     indexer.parallel = [p=profile_path_](const bool &abort) { return parseBookmarks(p, abort); };
     indexer.run();
 }
 
-void Plugin::resetBookmarksFileWatch()
-{
-    if (!fs_watcher_.files().isEmpty())
-        fs_watcher_.removePaths(fs_watcher_.files());
-    fs_watcher_.addPath(toQString(profile_path_ / "Bookmarks"));
+bool Plugin::showFavicons() const { return favicons_.get(); }
 
+void Plugin::setShowFavicons(bool v)
+{
+    if (v == showFavicons())
+        return;
+
+    settings()->setValue(CFG_SHOW_FAVICONS, v);
+
+    if (v)
+        updateCachedDatabase();
+    else
+    {
+        favicons_.reset();
+        BookmarkItem::favicons = nullptr;
+    }
 }

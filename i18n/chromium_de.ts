@@ -42,6 +42,10 @@
         <source>Match hostname</source>
         <translation>Hostname abgleichen</translation>
     </message>
+    <message>
+        <source>Show favicons</source>
+        <translation type="unfinished"></translation>
+    </message>
 </context>
 <context>
     <name>Plugin</name>

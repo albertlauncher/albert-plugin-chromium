@@ -8,6 +8,7 @@
 #include <memory>
 #include <vector>
 class BookmarkItem;
+class Favicons;
 
 class Plugin : public albert::ExtensionPlugin, public albert::IndexQueryHandler
 {
@@ -15,21 +16,29 @@ class Plugin : public albert::ExtensionPlugin, public albert::IndexQueryHandler
 
 public:
     Plugin();
+    ~Plugin();
+
     void updateIndexItems() override;
     QWidget *buildConfigWidget() override;
-
-    bool matchHostname() const;
-    void setMatchHostname(bool);
 
     QString profilePath() const;
     void setProfilePath(const QString &);
 
+    bool showFavicons() const;
+    void setShowFavicons(bool);
+
+    bool matchHostname() const;
+    void setMatchHostname(bool);
+
 private:
-    void resetBookmarksFileWatch();
+    void updateBookmarksFileWatch();
+    void updateCachedDatabase();
 
     std::filesystem::path profile_path_;
+
     albert::BackgroundExecutor<std::vector<std::shared_ptr<BookmarkItem>>> indexer;
     std::vector<std::shared_ptr<BookmarkItem>> bookmarks_;
-    QFileSystemWatcher fs_watcher_;
+    QFileSystemWatcher bookmarks_watch_;
     bool match_hostname_;
+    std::unique_ptr<Favicons> favicons_;
 };

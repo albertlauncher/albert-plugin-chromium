@@ -22,6 +22,10 @@
         <source>Match hostname</source>
         <translation></translation>
     </message>
+    <message>
+        <source>Show favicons</source>
+        <translation>Favicons anzeigen</translation>
+    </message>
 </context>
 <context>
     <name>Plugin</name>

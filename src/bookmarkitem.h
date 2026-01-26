@@ -1,7 +1,8 @@
-// Copyright (c) 2022-2024 Manuel Schneider
+// Copyright (c) 2022-2026 Manuel Schneider
 
 #pragma once
 #include <albert/item.h>
+class Favicons;
 
 class BookmarkItem : public albert::Item
 {
@@ -20,4 +21,6 @@ public:
     const QString name_;
     const QString folder_;
     const QString url_;
+
+    static Favicons* favicons;
 };
