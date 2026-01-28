@@ -31,12 +31,40 @@ const auto &kFaviconsMtime = u"favicons_mtime"_s;
 const auto &CFG_PROFILE_PATH = u"profile_path"_s;
 const auto &CFG_MATCH_HOSTNAME = u"match_hostname"_s;
 const auto &CFG_SHOW_FAVICONS = u"show_favicons"_s;
-const array DATA_DIR_NAMES = {"BraveSoftware"s,
-                              "Google/Chrome"s,  // Google Chrome Macos
-                              "brave-browser"s,
-                              "chromium"s,
-                              "google-chrome"s,
-                              "vivaldi"s};
+const array DATA_DIR_NAMES = {
+    "BraveSoftware/Brave-Browser"s,
+    "BraveSoftware/Brave-Browser-Beta"s,
+    "BraveSoftware/Brave-Browser-Dev"s,
+    "BraveSoftware/Brave-Browser-Nightly"s,
+    "Chromium"s,
+    "Google/Chrome Beta"s,
+    "Google/Chrome Dev"s,
+    "Google/Chrome SxS"s,
+    "Google/Chrome"s,
+    "Microsoft Edge Beta"s,
+    "Microsoft Edge Canary"s,
+    "Microsoft Edge Dev"s,
+    "Microsoft Edge"s,
+    "Opera Software/Opera GX Stable"s,
+    "Opera Software/Opera Stable"s,
+    "Vivaldi"s,
+    "Yandex/YandexBrowser"s
+    "Yandex/YandexBrowserBeta"s,
+    "brave-browser"s,
+    "brave-browser-beta"s,
+    "brave-browser-dev"s,
+    "chromium"s,
+    "google-chrome"s,
+    "google-chrome-beta"s,
+    "google-chrome-unstable"s,
+    "microsoft-edge"s,
+    "microsoft-edge-dev"s,
+    "opera"s,
+    "opera-gx"s,
+    "vivaldi"s,
+    "yandex-browser"s,
+    "yandex-browser-beta"s
+};
 }
 
 static expected<map<path, QString>, QString> getProfiles(const path &local_state_file)
@@ -281,7 +309,6 @@ void Plugin::updateCachedDatabase()
     favicons_ = make_unique<Favicons>(cached_db);
     BookmarkItem::favicons = favicons_.get();
 }
-
 
 bool Plugin::matchHostname() const { return match_hostname_; }
 
