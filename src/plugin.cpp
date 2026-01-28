@@ -214,12 +214,15 @@ Plugin::Plugin()
 
     match_hostname_ = s->value(CFG_MATCH_HOSTNAME, false).toBool();
 
-    const auto profiles = getProfiles();
-    if (profiles.empty())
-        throw runtime_error(tr("No profiles found.").toStdString());
     profile_path_ = s->value(CFG_PROFILE_PATH).toString().toStdString();
     if (profile_path_.empty())
-        setProfilePath(toQString(profiles.begin()->first));
+    {
+        if (const auto profiles = getProfiles();
+            profiles.empty())
+            throw runtime_error(tr("No profiles found.").toStdString());
+        else
+            setProfilePath(toQString(profiles.begin()->first));  // first found
+    }
     connect(&bookmarks_watch_, &QFileSystemWatcher::fileChanged, this, [this] {
         updateBookmarksFileWatch();
         indexer.run();
