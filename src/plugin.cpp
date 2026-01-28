@@ -273,8 +273,9 @@ void Plugin::updateCachedDatabase()
     favicons_.reset();
     if (!exists(cached_db) || mtime > last_mtime)
     {
-        if (copy_file(db, cached_db, copy_options::overwrite_existing))
-            WARN << "Failed to copy Favicons database to cache.";
+        error_code ec;
+        if (!copy_file(db, cached_db, copy_options::overwrite_existing, ec))
+            WARN << "Failed to copy Favicons database to cache:" << ec.message();
         state->setValue(kFaviconsMtime, mtime);
     }
     favicons_ = make_unique<Favicons>(cached_db);
