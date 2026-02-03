@@ -306,7 +306,8 @@ void Plugin::updateCachedDatabase()
     {
         error_code ec;
         if (!copy_file(db, cached_db, copy_options::overwrite_existing, ec))
-            WARN << "Failed to copy Favicons database to cache:" << ec.message();
+            WARN << "Failed to copy Favicons database to cache:"
+                 << QString::fromStdString(ec.message());
         state->setValue(kFaviconsMtime, mtime);
     }
     favicons_ = make_unique<Favicons>(cached_db);
