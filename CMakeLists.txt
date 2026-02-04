@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(chromium VERSION 10.0.1)
+project(chromium VERSION 10.0.2)
 
 find_package(Albert REQUIRED)
 
