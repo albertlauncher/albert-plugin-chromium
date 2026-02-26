@@ -139,10 +139,14 @@ static vector<path> findBrowserDataDirs()
 #if defined(Q_OS_LINUX)
     // include folders used by browsers installed with snap
     for (const auto &data_dir_name : DATA_DIR_NAMES)
-        std_paths.append(QDir::homePath() +
-            QStringLiteral("/snap/") +
-            QString::fromStdString(data_dir_name) +
-            QStringLiteral("/current/.config/"));
+    {
+        const auto snap_base_path = QDir::homePath() +
+            QStringLiteral("/snap/")
+            + QString::fromStdString(data_dir_name);
+
+        std_paths.append(snap_base_path + QStringLiteral("/current/.config/"));
+        std_paths.append(snap_base_path + QStringLiteral("/common/"));
+    }
 #endif
 
     vector<path> data_dir_paths;
