@@ -24,7 +24,7 @@
     </message>
     <message>
         <source>Show favicons</source>
-        <translation>Show favicons</translation>
+        <translation></translation>
     </message>
 </context>
 <context>
