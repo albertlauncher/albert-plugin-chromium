@@ -141,8 +141,8 @@ static vector<path> findBrowserDataDirs()
     for (const auto &data_dir_name : DATA_DIR_NAMES)
     {
         const auto snap_base_path = QDir::homePath() +
-            QStringLiteral("/snap/")
-            + QString::fromStdString(data_dir_name);
+            QStringLiteral("/snap/") +
+            QString::fromStdString(data_dir_name);
 
         std_paths.append(snap_base_path + QStringLiteral("/current/.config/"));
         std_paths.append(snap_base_path + QStringLiteral("/common/"));
