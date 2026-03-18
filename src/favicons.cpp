@@ -21,19 +21,20 @@ struct QImageIcon : public Icon
 
     QImageIcon(QImage img, QString url) : img_(::move(img)), url_(url) { }
 
-    QSize actualSize(const QSize &device_independent_size, double device_pixel_ratio) override
+    QSize actualSize(const QSize &device_independent_size, double) override
     {
         // Downscaled but never larger
-        if (const auto dds = device_independent_size * device_pixel_ratio;
-            dds.width() < img_.width() || dds.height() < img_.height())
-            return img_.size().scaled(dds, Qt::KeepAspectRatio) / device_pixel_ratio;
+        if (device_independent_size.width() < img_.width()
+            || device_independent_size.height() < img_.height())
+            return img_.size().scaled(device_independent_size, Qt::KeepAspectRatio);
         else
-            return img_.size() / device_pixel_ratio;
+            return img_.size();
     }
 
     void paint(QPainter *p, const QRect &rect) override
     {
-        const auto img_device_independent_size = img_.size() / p->device()->devicePixelRatio();
+        const auto img_device_independent_size = actualSize(rect.size(),
+                                                            p->device()->devicePixelRatioF());
         const auto tgt_rect
             = QRect(rect.x() + (rect.width() - img_device_independent_size.width()) / 2,
                     rect.y() + (rect.height() - img_device_independent_size.height()) / 2,

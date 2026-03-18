@@ -20,7 +20,7 @@ struct BookmarkIcon : public Icon
 
     void paint(QPainter *p, const QRect &rect) override
     {
-        const auto size = icon_->actualSize(rect.size(), p->device()->devicePixelRatio());
+        const auto size = icon_->actualSize(rect.size(), p->device()->devicePixelRatioF());
         const auto src_extent = max(size.width(), size.height());
         const auto dst_extent = min(rect.width(), rect.height());
 
