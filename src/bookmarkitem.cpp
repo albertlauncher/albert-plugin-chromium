@@ -1,7 +1,7 @@
 // Copyright (c) 2022-2026 Manuel Schneider
 
 #include "bookmarkitem.h"
-#include "favicons.h"
+#include "faviconsdatabase.h"
 #include <QCoreApplication>
 #include <QPainter>
 #include <albert/icon.h>
@@ -10,33 +10,57 @@ using namespace Qt::Literals;
 using namespace albert;
 using namespace std;
 
-Favicons *BookmarkItem::favicons = nullptr;
-
-struct BookmarkIcon : public Icon
+struct FaviconIcon : public Icon
 {
-    unique_ptr<Icon> icon_;
+    QString url;
+    optional<QImage> img;  // lazy loaded
 
-    BookmarkIcon(unique_ptr<Icon> e) : icon_(::move(e)) { }
+    FaviconIcon(const QString &url) : url(::move(url)) { }
+
+    void loadLazy()
+    {
+        if (!img)
+        {
+            if (FaviconsDatabase::instance)
+                img = FaviconsDatabase::instance->faviconForUrl(url);
+            else
+                img = QImage();
+        }
+    }
+
+    bool isNull() override
+    {
+        loadLazy();
+        return img->isNull();
+    }
+
+    unique_ptr<Icon> clone() const override
+    {
+        auto icon = make_unique<FaviconIcon>(url);
+        icon->img = img;  // share loaded image
+        return icon;
+    }
+
+    QString toUrl() const override { return u"chrome_favicon:"_s + url; }
+
+    QSize actualSize(const QSize &device_independent_size, double) override
+    {
+        if (img->isNull())  // calls loadLazy();
+            return {};
+
+        return device_independent_size;
+    }
 
     void paint(QPainter *p, const QRect &rect) override
     {
-        const auto size = icon_->actualSize(rect.size(), p->device()->devicePixelRatio());
-        const auto src_extent = max(size.width(), size.height());
-        const auto dst_extent = min(rect.width(), rect.height());
+        if (img->isNull())  // calls loadLazy();
+            return;
 
-        if (src_extent > dst_extent/2)
-            Icon::iconified(icon_->clone())->paint(p, rect);
-        else
-            Icon::composed(Icon::image(u":star"_s),
-                           Icon::iconified(icon_->clone()),
-                           1.0, .5)->paint(p, rect);
+        p->save();
+        p->setRenderHint(QPainter::SmoothPixmapTransform, true);
+        p->drawImage(rect, *img);
+        p->restore();
     }
-
-    bool isNull() override { return icon_->isNull(); }
-
-    unique_ptr<Icon> clone() const override { return make_unique<BookmarkIcon>(icon_->clone()); }
-
-    QString toUrl() const override { return u"chromium:"_s + icon_->toUrl(); }
 };
 
 BookmarkItem::BookmarkItem(const QString &i, const QString &n, const QString &f, const QString &u) :
@@ -56,9 +80,10 @@ QString BookmarkItem::inputActionText() const { return name_; }
 
 unique_ptr<Icon> BookmarkItem::icon() const
 {
-    if (favicons)
-        if (auto fi = favicons->iconForUrl(url_); fi)
-            return make_unique<BookmarkIcon>(::move(fi));
+    if (FaviconsDatabase::instance)
+        if (auto favicon = make_unique<FaviconIcon>(url_); !favicon->isNull())
+            return Icon::iconified(::move(favicon));
+
     return Icon::image(u":star"_s);
 }
 

@@ -1,7 +1,7 @@
 // Copyright (c) 2022-2026 Manuel Schneider
 
 #include "bookmarkitem.h"
-#include "favicons.h"
+#include "faviconsdatabase.h"
 #include "plugin.h"
 #include "ui_configwidget.h"
 #include <QFile>
@@ -241,7 +241,10 @@ Plugin::Plugin()
         updateCachedDatabase();
 }
 
-Plugin::~Plugin() {}
+Plugin::~Plugin()
+{
+    FaviconsDatabase::instance.reset();
+}
 
 void Plugin::updateIndexItems()
 {
@@ -301,7 +304,7 @@ void Plugin::updateCachedDatabase()
     qint64 last_mtime = state->value(kFaviconsMtime, 0).toLongLong();
     qint64 mtime = duration_cast<seconds>(last_write_time(db).time_since_epoch()).count();
 
-    favicons_.reset();
+    FaviconsDatabase::instance.reset();
     if (!exists(cached_db) || mtime > last_mtime)
     {
         error_code ec;
@@ -310,8 +313,7 @@ void Plugin::updateCachedDatabase()
                  << QString::fromStdString(ec.message());
         state->setValue(kFaviconsMtime, mtime);
     }
-    favicons_ = make_unique<Favicons>(cached_db);
-    BookmarkItem::favicons = favicons_.get();
+    FaviconsDatabase::instance = make_unique<FaviconsDatabase>(cached_db);
 }
 
 bool Plugin::matchHostname() const { return match_hostname_; }
@@ -345,7 +347,7 @@ void Plugin::setProfilePath(const QString &v)
     indexer.run();
 }
 
-bool Plugin::showFavicons() const { return favicons_.get(); }
+bool Plugin::showFavicons() const { return FaviconsDatabase::instance.get(); }
 
 void Plugin::setShowFavicons(bool v)
 {
@@ -357,8 +359,5 @@ void Plugin::setShowFavicons(bool v)
     if (v)
         updateCachedDatabase();
     else
-    {
-        favicons_.reset();
-        BookmarkItem::favicons = nullptr;
-    }
+        FaviconsDatabase::instance.reset();
 }

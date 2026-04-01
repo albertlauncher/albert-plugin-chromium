@@ -8,7 +8,6 @@
 #include <memory>
 #include <vector>
 class BookmarkItem;
-class Favicons;
 
 class Plugin : public albert::ExtensionPlugin, public albert::IndexQueryHandler
 {
@@ -40,5 +39,4 @@ private:
     std::vector<std::shared_ptr<BookmarkItem>> bookmarks_;
     QFileSystemWatcher bookmarks_watch_;
     bool match_hostname_;
-    std::unique_ptr<Favicons> favicons_;
 };
