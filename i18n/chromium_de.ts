@@ -44,7 +44,7 @@
     </message>
     <message>
         <source>Show favicons</source>
-        <translation type="unfinished"></translation>
+        <translation>Favicons anzeigen</translation>
     </message>
 </context>
 <context>

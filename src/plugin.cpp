@@ -4,6 +4,7 @@
 #include "faviconsdatabase.h"
 #include "plugin.h"
 #include "ui_configwidget.h"
+#include <QDir>
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -134,9 +135,22 @@ static vector<path> findBrowserDataDirs()
 #else
     const auto std_loc = QStandardPaths::GenericConfigLocation;
 #endif
+    auto std_paths = QStandardPaths::standardLocations(std_loc);
+#if defined(Q_OS_LINUX)
+    // include folders used by browsers installed with snap
+    for (const auto &data_dir_name : DATA_DIR_NAMES)
+    {
+        const auto snap_base_path = QDir::homePath() +
+            QStringLiteral("/snap/") +
+            QString::fromStdString(data_dir_name);
+
+        std_paths.append(snap_base_path + QStringLiteral("/current/.config/"));
+        std_paths.append(snap_base_path + QStringLiteral("/common/"));
+    }
+#endif
 
     vector<path> data_dir_paths;
-    for (const auto &std_path : QStandardPaths::standardLocations(std_loc))
+    for (const auto &std_path : std_paths)
         for (const auto &data_dir_name : DATA_DIR_NAMES)
             if (auto data_dir_path = path(std_path.toStdString()) / data_dir_name;
                 exists(data_dir_path))
