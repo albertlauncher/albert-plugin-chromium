@@ -4,6 +4,7 @@
 #include "faviconsdatabase.h"
 #include "plugin.h"
 #include "ui_configwidget.h"
+#include <QDir>
 #include <QFile>
 #include <QJsonArray>
 #include <QJsonDocument>
@@ -31,6 +32,7 @@ const auto &kFaviconsMtime = u"favicons_mtime"_s;
 const auto &CFG_PROFILE_PATH = u"profile_path"_s;
 const auto &CFG_MATCH_HOSTNAME = u"match_hostname"_s;
 const auto &CFG_SHOW_FAVICONS = u"show_favicons"_s;
+
 const array DATA_DIR_NAMES = {
     "BraveSoftware/Brave-Browser"s,
     "BraveSoftware/Brave-Browser-Beta"s,
@@ -65,6 +67,36 @@ const array DATA_DIR_NAMES = {
     "yandex-browser"s,
     "yandex-browser-beta"s
 };
+
+#if defined(Q_OS_LINUX)
+const array SNAP_APP_IDS = {
+    "brave-browser"s,
+    "brave-browser-beta"s,
+    "brave-browser-dev"s,
+    "chromium"s,
+    "google-chrome"s,
+    "google-chrome-beta"s,
+    "google-chrome-unstable"s,
+    "microsoft-edge"s,
+    "microsoft-edge-dev"s,
+    "opera"s,
+    "opera-gx"s,
+    "vivaldi"s,
+    "yandex-browser"s,
+    "yandex-browser-beta"s
+};
+
+const array FLATPAK_APP_IDS = {
+    "com.brave.Browser"s,
+    "com.google.Chrome"s,
+    "com.microsoft.Edge"s,
+    "com.opera.Opera"s,
+    "com.vivaldi.Vivaldi"s,
+    "org.chromium.Chromium"s,
+    "ru.yandex.Browser"s
+};
+#endif
+
 }
 
 static expected<map<path, QString>, QString> getProfiles(const path &local_state_file)
@@ -135,12 +167,39 @@ static vector<path> findBrowserDataDirs()
     const auto std_loc = QStandardPaths::GenericConfigLocation;
 #endif
 
+    auto std_paths = QStandardPaths::standardLocations(std_loc);
+
+#if defined(Q_OS_LINUX)
+    // Include folders used by browsers installed with Snap.
+    for (const auto &app_id : SNAP_APP_IDS)
+    {
+        const auto base =
+            QDir::homePath() +
+            QStringLiteral("/snap/") +
+            QString::fromStdString(app_id);
+
+        std_paths.append(base + QStringLiteral("/current/.config/"));
+        std_paths.append(base + QStringLiteral("/common/"));
+    }
+
+    // Include folders used by browsers installed with Flatpak.
+    for (const auto &app_id : FLATPAK_APP_IDS)
+    {
+        std_paths.append(
+            QDir::homePath() +
+            QStringLiteral("/.var/app/") +
+            QString::fromStdString(app_id) +
+            QStringLiteral("/config/"));
+    }
+#endif
+
     vector<path> data_dir_paths;
-    for (const auto &std_path : QStandardPaths::standardLocations(std_loc))
+    for (const auto &std_path : as_const(std_paths))
         for (const auto &data_dir_name : DATA_DIR_NAMES)
             if (auto data_dir_path = path(std_path.toStdString()) / data_dir_name;
                 exists(data_dir_path))
                 data_dir_paths.emplace_back(data_dir_path);
+
     return data_dir_paths;
 }
 
