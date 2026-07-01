@@ -15,26 +15,6 @@
 <context>
     <name>ConfigWidget</name>
     <message>
-        <source>Add</source>
-        <translation type="vanished">Hinzufügen</translation>
-    </message>
-    <message>
-        <source>Bookmarks files:</source>
-        <translation type="vanished">Lesezeichen-Dateien:</translation>
-    </message>
-    <message>
-        <source>Remove</source>
-        <translation type="vanished">Entfernen</translation>
-    </message>
-    <message>
-        <source>Reset</source>
-        <translation type="vanished">Zurücksetzen</translation>
-    </message>
-    <message>
-        <source>Use hostname in search</source>
-        <translation type="vanished">Nutze Hostname in der Suche</translation>
-    </message>
-    <message>
         <source>Profile</source>
         <translation>Profil</translation>
     </message>
@@ -44,30 +24,11 @@
     </message>
     <message>
         <source>Show favicons</source>
-        <translation type="unfinished"></translation>
+        <translation>Favicons anzeigen</translation>
     </message>
 </context>
 <context>
     <name>Plugin</name>
-    <message numerus="yes">
-        <source>%n bookmarks indexed.</source>
-        <translation type="vanished">
-            <numerusform>%n Lesezeichen indexiert.</numerusform>
-            <numerusform>%n Lesezeichen indexiert.</numerusform>
-        </translation>
-    </message>
-    <message>
-        <source>Select bookmarks file</source>
-        <translation type="vanished">Wähle Lesezeichen-Datei</translation>
-    </message>
-    <message>
-        <source>Bookmarks</source>
-        <translation type="vanished">Lesezeichen</translation>
-    </message>
-    <message>
-        <source>No Chromium-based browser profiles found.</source>
-        <translation type="obsolete">Keine Chromium-basierten Browserprofile gefunden.</translation>
-    </message>
     <message>
         <source>No profiles found.</source>
         <translation>Keine Profile gefunden.</translation>

@@ -24,18 +24,11 @@
     </message>
     <message>
         <source>Show favicons</source>
-        <translation>Favicons anzeigen</translation>
+        <translation></translation>
     </message>
 </context>
 <context>
     <name>Plugin</name>
-    <message numerus="yes">
-        <source>%n bookmarks indexed.</source>
-        <translation type="vanished">
-            <numerusform>%n bookmark indexed.</numerusform>
-            <numerusform>%n bookmarks indexed.</numerusform>
-        </translation>
-    </message>
     <message>
         <source>No profiles found.</source>
         <translation></translation>
