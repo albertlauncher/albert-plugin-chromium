@@ -17,35 +17,33 @@ struct FaviconIcon : public Icon
 
     FaviconIcon(const QString &url) : url(::move(url)) { }
 
-    void loadLazy()
+    static QImage load(const QString &url)
     {
-        if (!img)
-        {
-            if (FaviconsDatabase::instance)
-                img = FaviconsDatabase::instance->faviconForUrl(url);
-            else
-                img = QImage();
-        }
+        if (FaviconsDatabase::instance)
+            if (auto img = FaviconsDatabase::instance->faviconForUrl(url);
+                img)
+                return ::move(*img);
+
+        return {};
     }
 
     bool isNull() override
     {
-        loadLazy();
+        if (!img)
+            img = load(url);
         return img->isNull();
     }
 
-    unique_ptr<Icon> clone() const override
-    {
-        auto icon = make_unique<FaviconIcon>(url);
-        icon->img = img;  // share loaded image
-        return icon;
-    }
+    unique_ptr<Icon> clone() const override { return make_unique<FaviconIcon>(*this); }
 
     QString toUrl() const override { return u"chrome_favicon:"_s + url; }
 
     QSize actualSize(const QSize &device_independent_size, double) override
     {
-        if (img->isNull())  // calls loadLazy();
+        if (!img)
+            img = load(url);
+
+        if (img->isNull())
             return {};
 
         return device_independent_size;
@@ -53,7 +51,10 @@ struct FaviconIcon : public Icon
 
     void paint(QPainter *p, const QRect &rect) override
     {
-        if (img->isNull())  // calls loadLazy();
+        if (!img)
+            img = load(url);
+
+        if (img->isNull())
             return;
 
         p->save();
