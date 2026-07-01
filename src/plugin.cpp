@@ -327,13 +327,12 @@ QWidget *Plugin::buildConfigWidget()
     // populate profiles checkbox
     for (const auto &[path, name] : getProfiles())
     {
-        const auto rel = relative(path, path.parent_path().parent_path());
-        const auto title = u"%1 (%2)"_s.arg(name, toQString(rel));
         const auto qpath = toQString(path);
-
-        ui.comboBox_profile->addItem(title, qpath);
+        ui.comboBox_profile->addItem(name, qpath);
+        auto index = ui.comboBox_profile->count()-1;
         if (path == profile_path_)
-            ui.comboBox_profile->setCurrentIndex(ui.comboBox_profile->count()-1);
+            ui.comboBox_profile->setCurrentIndex(index);
+        ui.comboBox_profile->setItemData(index, qpath, Qt::ToolTipRole);
     }
 
     connect(ui.comboBox_profile,
