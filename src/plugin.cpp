@@ -276,7 +276,7 @@ Plugin::Plugin()
     match_hostname_ = s->value(CFG_MATCH_HOSTNAME, false).toBool();
 
     profile_path_ = s->value(CFG_PROFILE_PATH).toString().toStdString();
-    if (profile_path_.empty())
+    if (profile_path_.empty() || !QDir(profile_path_).exists())
     {
         if (const auto profiles = getProfiles();
             profiles.empty())
