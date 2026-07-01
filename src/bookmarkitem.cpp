@@ -15,7 +15,7 @@ struct FaviconIcon : public Icon
     QString url;
     optional<QImage> img;  // lazy loaded
 
-    FaviconIcon(const QString &url) : url(::move(url)) { }
+    FaviconIcon(const QString &url_) : url(url_) { }
 
     static QImage load(const QString &url)
     {
