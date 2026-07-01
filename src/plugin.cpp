@@ -138,7 +138,8 @@ static expected<map<path, QString>, QString> getProfiles(const path &local_state
     {
         map<path, QString> ret;
 
-        for (const auto &profile_id : info_cache_obj.keys())
+        for (const auto profile_ids = info_cache_obj.keys();
+             const auto &profile_id : profile_ids)
             if (const auto profile_val = info_cache_obj[profile_id];
                 !profile_val.isObject())
                 return unexpected(u"Invalid profile object for id '%1'."_s.arg(profile_id));
@@ -232,7 +233,8 @@ static void recursiveJsonTreeWalker(const QString &folder_path,
         // having the full folder path shouldnt be too expensive due to the shared nature of qstring
         QString folder_path_ = folder_path.isEmpty() ? name : folder_path + u" → "_s + name;
 
-        for (const QJsonValueRef &child : json[u"children"_s].toArray())
+        for (const auto children = json[u"children"_s].toArray();
+             const auto &child : children)
             if (abort)
                 return;
             else
