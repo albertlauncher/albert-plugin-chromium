@@ -1,6 +1,7 @@
 // Copyright (c) 2026-2026 Manuel Schneider
 
 #pragma once
+#include <QImage>
 #include <QSqlDatabase>
 #include <filesystem>
 
