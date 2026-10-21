@@ -162,7 +162,7 @@ static expected<map<path, QString>, QString> getProfiles(const path &local_state
 
 static vector<path> findBrowserDataDirs()
 {
-#if defined(Q_OS_MAC)
+#if defined(Q_OS_MACOS)
     const auto std_loc = QStandardPaths::GenericDataLocation;
 #else
     const auto std_loc = QStandardPaths::GenericConfigLocation;
